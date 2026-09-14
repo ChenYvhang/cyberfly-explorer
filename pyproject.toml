@@ -1,0 +1,13 @@
+[project]
+name = "cyberfly-explorer"
+version = "0.1.0"
+description = "CPU-friendly MaleCNS cyberfly exploring a lightweight 3D world"
+requires-python = ">=3.10"
+dependencies = [
+  "flybrain==0.1.0",
+  "pygame-ce>=2.5",
+]
+
+[tool.setuptools]
+packages = ["cyberfly"]
+

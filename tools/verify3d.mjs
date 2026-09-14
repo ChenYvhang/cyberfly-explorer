@@ -1,0 +1,30 @@
+import {chromium} from 'playwright';
+const browser=await chromium.launch({channel:'msedge',headless:true,args:['--enable-webgl','--ignore-gpu-blocklist']});
+const page=await browser.newPage({viewport:{width:1440,height:960}});
+const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto('http://127.0.0.1:8765');
+await page.waitForFunction(()=>window.cyberflyReady,null,{timeout:60000});
+await page.waitForFunction(()=>document.getElementById('status').textContent==='模拟已暂停',null,{timeout:60000});
+await page.locator('#play').click();
+await page.waitForFunction(()=>parseFloat(document.getElementById('simtime').textContent)>.3,null,{timeout:60000});
+await page.locator('#play').click();
+await page.waitForFunction(()=>document.getElementById('status').textContent==='模拟已暂停');
+await page.waitForTimeout(2500);
+await page.screenshot({path:'preview-3d.png'});
+await page.locator('#macro').click();await page.waitForTimeout(600);
+await page.screenshot({path:'preview-3d-macro.png'});
+console.log(JSON.stringify(await page.evaluate(()=>({model:window.modelReport,render:window.renderInfo,fps:document.getElementById('fps').textContent})),null,2));
+await page.locator('#editor').click();await page.waitForTimeout(700);
+// Exercise the same command endpoint used by ground picking, without altering saved maps.
+const edited=await page.evaluate(async()=>{
+ const command=async d=>(await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})).json();
+ const before=await(await fetch('/api/world')).json();
+ await command({action:'paint',tool:'plant',x:2,y:2});
+ const after=await(await fetch('/api/world')).json();
+ await command({action:'paint',tool:'floor',x:2,y:2});
+ return {increment:after.revision>before.revision,plant:after.decor.some(x=>x.kind==='plant'&&x.x===2.5&&x.y===2.5)};
+});
+console.log('editing',edited);
+await page.screenshot({path:'preview-3d-editor.png'});
+console.log('errors',errors);
+await browser.close();if(errors.length)process.exitCode=1;

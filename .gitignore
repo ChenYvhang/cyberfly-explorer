@@ -1,0 +1,26 @@
+# Local runtime environments and generated packages
+.venv/
+node_modules/
+*.egg-info/
+__pycache__/
+*.py[cod]
+
+# MaleCNS data is downloaded on first run (~260 MB)
+data/
+
+# User-authored maps and local logs
+maps/custom_map.json
+*.log
+
+# Development renders; keep the two curated screenshots explicitly
+preview.png
+preview-hq.png
+map-editor.png
+preview-3d.png
+
+# Editor / OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
