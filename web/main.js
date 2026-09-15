@@ -67,9 +67,9 @@ function buildWorld(data){mapData=data;lastRevision=data.revision;clearGroup(hab
  if(o.kind==='puddle'){let puddle=mesh(new T.CircleGeometry(o.radius,48),mats.water,habitat,[o.x,.002,o.y],[1, .8,1]);puddle.rotation.x=-Math.PI/2;puddle.castShadow=false;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;mesh(rockGeo,mats.stone,habitat,[o.x+Math.cos(a)*o.radius,.04,o.y+Math.sin(a)*o.radius*.8],[.11,.08,.08]);}}}
  rebuildFoods(data.foods);
 }
-let flyModel,animated=[],flySize=1,latest,frameCount=0,lastFps=performance.now(),edit=false,selectedTool='food',follow=true;
+let flyModel,animated=[],flySize=1,latest,frameCount=0,lastFps=performance.now(),edit=false,selectedTool='food',follow=true,cameraMode='follow',cameraHeading=0;
 const loader=new GLTFLoader();
-loader.load('/assets/flybody.glb',gltf=>{
+loader.load('./assets/flybody.glb',gltf=>{
  flyModel=gltf.scene;flyRoot.add(flyModel);
  const palette={body:'#855329',lower:'#b78348',red:'#a92b13',brown:'#533018',black:'#1a130f','bristle-brown':'#29180d',ocelli:'#32160d',membrane:'#c8d7d2'};
  flyModel.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;
@@ -93,8 +93,12 @@ async function poll(){try{latest=await (await fetch('/api/state')).json();if(las
  if(pathLine){scene.remove(pathLine);pathLine.geometry.dispose();}pathLine=new T.Line(new T.BufferGeometry().setFromPoints(latest.trail.map(p=>new T.Vector3(p[0],.01,p[1]))),pathMat);pathLine.visible=$('trail').checked;scene.add(pathLine);
  }catch(e){$('status').textContent='本地服务连接中断';}setTimeout(poll,110);}
 const startMap=await(await fetch('/api/world')).json();buildWorld(startMap);latest=await(await fetch('/api/state')).json();
-flyRoot.position.set(latest.fly.x,0,latest.fly.y);controls.target.copy(flyRoot.position).add(new T.Vector3(0,.3,0));camera.position.copy(controls.target).add(new T.Vector3(5.2,3.8,5.0));controls.update();poll();
-function cameraView(mode){const p=flyRoot.position.clone().add(new T.Vector3(0,.35,0));controls.target.copy(p);camera.position.copy(p).add(mode==='macro'?new T.Vector3(2.0,1.0,1.7):mode==='overview'?new T.Vector3(15,19,15):new T.Vector3(5.2,3.8,5));follow=mode!=='overview';for(const k of ['follow','macro','overview'])$(k).classList.toggle('selected',k===mode);}
+flyRoot.position.set(latest.fly.x,0,latest.fly.y);poll();
+function cameraView(mode){cameraMode=mode;cameraHeading=latest?.fly.heading||0;const p=flyRoot.position.clone().add(new T.Vector3(0,.35,0)),h=cameraHeading;controls.target.copy(p);
+ const distance=mode==='macro'?2.15:4.8,height=mode==='macro'?1.15:2.8;
+ camera.position.copy(p).add(mode==='overview'?new T.Vector3(15,19,15):new T.Vector3(-Math.cos(h)*distance,height,-Math.sin(h)*distance));
+ follow=mode!=='overview';controls.update();for(const k of ['follow','macro','overview'])$(k).classList.toggle('selected',k===mode);}
+cameraView('follow');
 for(const k of ['follow','macro','overview'])$(k).onclick=()=>cameraView(k);
 $('play').onclick=()=>command({action:'pause',value:!latest.paused}).catch(e=>toast(e.message));
 $('shadows').onchange=()=>renderer.shadowMap.enabled=$('shadows').checked;
@@ -111,7 +115,8 @@ renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 let last=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;
  if(latest){const target=new T.Vector3(latest.fly.x,0,latest.fly.y),previous=flyRoot.position.clone();flyRoot.position.lerp(target,1-Math.exp(-dt*14));flyRoot.rotation.y=-latest.fly.heading;
- if(follow&&!edit){const delta=flyRoot.position.clone().sub(previous);camera.position.add(delta);controls.target.add(delta);}
+ if(follow&&!edit){const newTarget=flyRoot.position.clone().add(new T.Vector3(0,.35,0)),offset=camera.position.clone().sub(controls.target),headingDelta=Math.atan2(Math.sin(latest.fly.heading-cameraHeading),Math.cos(latest.fly.heading-cameraHeading));
+  offset.applyAxisAngle(new T.Vector3(0,1,0),-headingDelta);camera.position.copy(newTarget).add(offset);controls.target.copy(newTarget);cameraHeading=latest.fly.heading;}
  const t=latest.time;
  for(const a of animated){let phase=/right/.test(a.name)?Math.PI:0;if(/T2/.test(a.name))phase+=Math.PI;let angle=0;
  if(/wing/.test(a.name))angle=Math.sin(t*25)*.025;
