@@ -7,7 +7,10 @@ await page.goto(baseURL);
 await page.waitForFunction(()=>window.cyberflyReady,null,{timeout:60000});
 await page.waitForFunction(()=>/暂停/.test(document.getElementById('status').textContent),null,{timeout:60000});
 await page.locator('#play').click();
-await page.waitForFunction(()=>parseFloat(document.getElementById('simtime').textContent)>.3,null,{timeout:60000});
+await page.waitForFunction(()=>parseFloat(document.getElementById('altitude').textContent)>1.0,null,{timeout:60000});
+const flight=await page.evaluate(()=>({altitude:parseFloat(document.getElementById('altitude').textContent),mode:document.getElementById('flightmode').textContent}));
+if(flight.altitude<=1||!/起飞|巡航/.test(flight.mode))throw new Error(`3D flight did not engage: ${JSON.stringify(flight)}`);
+await page.screenshot({path:'preview-3d-flight.png'});
 await page.locator('#play').click();
 await page.waitForFunction(()=>/暂停/.test(document.getElementById('status').textContent));
 await page.waitForTimeout(2500);
@@ -15,6 +18,7 @@ await page.screenshot({path:'preview-3d.png'});
 await page.locator('#macro').click();await page.waitForTimeout(600);
 await page.screenshot({path:'preview-3d-macro.png'});
 console.log(JSON.stringify(await page.evaluate(()=>({model:window.modelReport,render:window.renderInfo,fps:document.getElementById('fps').textContent})),null,2));
+console.log('flight',flight);
 await page.locator('#editor').click();await page.waitForTimeout(700);
 // Exercise the same command endpoint used by ground picking, without altering saved maps.
 const edited=await page.evaluate(async()=>{

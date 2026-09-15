@@ -5,9 +5,11 @@
 <header><div class="brand"><span class="mark">◈</span><div>CYBERFLY <small>微观栖境 / HABITAT 01</small></div></div><div class="badge"><i></i> <span id="status">正在加载三维模型</span></div></header>
 <aside><div class="eyebrow">LIVE SPECIMEN</div><h1>黑腹果蝇</h1><div class="latin">Drosophila melanogaster</div><p class="caption">FlyBody 解剖网格 · MaleCNS 神经模拟</p>
 <div class="rule"></div><div class="row"><span>观察状态</span><b id="behavior">准备就绪</b></div><div class="row"><span>模拟时间</span><b id="simtime">0.00 s</b></div><div class="row"><span>神经计算</span><b id="ms">—</b></div><div class="row"><span>活跃神经元</span><b id="active">—</b></div><div class="row"><span>发现食物</span><b id="food">0</b></div>
+<div class="row"><span>运动模式</span><b id="flightmode">地面</b></div><div class="row"><span>飞行高度</span><b id="altitude">0.00 m</b></div>
 <div class="rule"></div><div class="eyebrow">DESCENDING ACTIVITY</div><div class="meterlabel">左转 DNa02 <span id="leftvalue">0 Hz</span></div><div class="meter"><div id="leftbar"></div></div><div class="meterlabel">右转 DNa02 <span id="rightvalue">0 Hz</span></div><div class="meter"><div id="rightbar"></div></div>
 <div class="rule"></div><div class="eyebrow">CAMERA</div><div class="buttons"><button id="follow" class="selected">跟随</button><button id="macro">微距</button><button id="overview">全景</button></div><label class="check"><input id="trail" type="checkbox" checked> 显示探索轨迹</label><label class="check"><input id="shadows" type="checkbox" checked> 柔和阴影</label>
+<label class="check"><input id="flight" type="checkbox" checked> 允许自主飞行</label>
 <div class="rule"></div><button id="editor" class="wide">✎ 编辑栖境</button><div id="editpanel" hidden><p class="caption">点击地面放置 · 右键单击擦除</p><div id="palette"></div><div class="buttons"><button id="save">保存</button><button id="load">载入</button><button id="garden">自然栖境</button></div></div>
-<p class="note">动作动画与行走驱动为人工身体控制。<br>此模型不包含完整关节动力学。</p></aside>
+<p class="note">飞行使用轻量六状态动力学与神经输出调制。<br>不宣称逐翼拍空气动力学或 CFD 仿真。</p></aside>
 <footer><button id="play" class="primary">开始探索</button><span>拖动旋转 · 滚轮缩放 · 右键拖动平移</span><div id="fps">— FPS</div></footer><div id="toast"></div>
 <script type="module" src="/web/main.js"></script></body></html>

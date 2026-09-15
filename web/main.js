@@ -85,15 +85,16 @@ const pathMat=new T.LineBasicMaterial({color:'#719a72',transparent:true,opacity:
 function toast(t){$('toast').textContent=t;$('toast').style.opacity=1;clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('toast').style.opacity=0,3500);}
 async function command(d){const r=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});const j=await r.json();if(!r.ok)throw Error(j.error);return j;}
 async function poll(){try{latest=await (await fetch('/api/state')).json();if(lastRevision!==latest.revision)buildWorld(await(await fetch('/api/world')).json());rebuildFoods(latest.foods);
- $('status').textContent=latest.error?latest.error:latest.status==='warming'?'神经模型预热中':latest.status==='preview'?'画面预览 · 无神经模拟':latest.status==='demo'?(latest.paused?'在线演示已暂停':'在线轻量闭环运行中'):latest.paused?'模拟已暂停':'全脑闭环运行中';
- const states={'exploring':'探索','feeding':'接触食物','escaping':'逃逸','avoiding':'接近障碍','tracking food':'接近食物'};
+ $('status').textContent=latest.error?latest.error:latest.status==='warming'?'神经模型预热中':latest.status==='preview'?(latest.paused?'画面预览已暂停':'画面预览运行中 · 无神经模拟'):latest.status==='demo'?(latest.paused?'在线演示已暂停':'在线轻量闭环运行中'):latest.paused?'模拟已暂停':'全脑闭环运行中';
+ const states={'exploring':'探索','feeding':'接触食物','escaping':'逃逸','avoiding':'接近障碍','tracking food':'接近食物','taking off':'起飞','flying':'巡航飞行','air avoiding':'空中避障','landing':'降落'};
  $('behavior').textContent=states[latest.fly.state]||latest.fly.state;$('simtime').textContent=latest.time.toFixed(2)+' s';$('ms').textContent=latest.stats.step_ms?latest.stats.step_ms.toFixed(1)+' ms':'—';$('active').textContent=latest.status==='preview'?'—':(latest.stats.active||0).toLocaleString();$('food').textContent=latest.fly.foods_found+' / '+(latest.foods.length+latest.fly.foods_found);
+ const flightNames={ground:'地面爬行',takeoff:'起飞',cruise:'空中巡航',landing:'降落'};$('flightmode').textContent=flightNames[latest.fly.flight_mode]||'地面爬行';$('altitude').textContent=(latest.fly.altitude||0).toFixed(2)+' m';$('flight').checked=latest.fly.flight_enabled!==false;
  $('play').textContent=latest.paused?'开始探索':'暂停探索';
  for(const [k,id] of [['steer_L','left'],['steer_R','right']]){const v=latest.stats[k]||0;$(id+'value').textContent=v.toFixed(1)+' Hz';$(id+'bar').style.width=Math.min(v/20*100,100)+'%';}
- if(pathLine){scene.remove(pathLine);pathLine.geometry.dispose();}pathLine=new T.Line(new T.BufferGeometry().setFromPoints(latest.trail.map(p=>new T.Vector3(p[0],.01,p[1]))),pathMat);pathLine.visible=$('trail').checked;scene.add(pathLine);
+ if(pathLine){scene.remove(pathLine);pathLine.geometry.dispose();}pathLine=new T.Line(new T.BufferGeometry().setFromPoints(latest.trail.map(p=>p.length>2?new T.Vector3(p[0],p[1]+.04,p[2]):new T.Vector3(p[0],.01,p[1]))),pathMat);pathLine.visible=$('trail').checked;scene.add(pathLine);
  }catch(e){$('status').textContent='本地服务连接中断';}setTimeout(poll,110);}
 const startMap=await(await fetch('/api/world')).json();buildWorld(startMap);latest=await(await fetch('/api/state')).json();
-flyRoot.position.set(latest.fly.x,0,latest.fly.y);poll();
+flyRoot.position.set(latest.fly.x,latest.fly.altitude||0,latest.fly.y);poll();
 function cameraView(mode){cameraMode=mode;cameraHeading=latest?.fly.heading||0;const p=flyRoot.position.clone().add(new T.Vector3(0,.35,0)),h=cameraHeading;controls.target.copy(p);
  const distance=mode==='macro'?2.15:4.8,height=mode==='macro'?1.15:2.8;
  camera.position.copy(p).add(mode==='overview'?new T.Vector3(15,19,15):new T.Vector3(-Math.cos(h)*distance,height,-Math.sin(h)*distance));
@@ -101,6 +102,7 @@ function cameraView(mode){cameraMode=mode;cameraHeading=latest?.fly.heading||0;c
 cameraView('follow');
 for(const k of ['follow','macro','overview'])$(k).onclick=()=>cameraView(k);
 $('play').onclick=()=>command({action:'pause',value:!latest.paused}).catch(e=>toast(e.message));
+$('flight').onchange=()=>command({action:'flight',value:$('flight').checked}).catch(e=>toast(e.message));
 $('shadows').onchange=()=>renderer.shadowMap.enabled=$('shadows').checked;
 const cursor=mesh(new T.PlaneGeometry(.98,.98),new T.MeshBasicMaterial({color:'#b9dc90',transparent:true,opacity:.55,side:T.DoubleSide}),scene);cursor.rotation.x=-Math.PI/2;cursor.visible=false;cursor.castShadow=false;
 const tools=[['food','香蕉'],['plant','植物'],['rock','岩石'],['puddle','水洼'],['stump','树桩'],['wall','石墙'],['floor','擦除'],['spawn','出生点']];
@@ -114,14 +116,14 @@ renderer.domElement.addEventListener('pointerup',e=>{if(edit&&cell&&down&&Math.h
 renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 let last=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;
- if(latest){const target=new T.Vector3(latest.fly.x,0,latest.fly.y),previous=flyRoot.position.clone();flyRoot.position.lerp(target,1-Math.exp(-dt*14));flyRoot.rotation.y=-latest.fly.heading;
+ if(latest){const target=new T.Vector3(latest.fly.x,latest.fly.altitude||0,latest.fly.y),previous=flyRoot.position.clone();flyRoot.position.lerp(target,1-Math.exp(-dt*14));flyRoot.rotation.set(latest.fly.roll||0,-latest.fly.heading,-(latest.fly.pitch||0),'YXZ');
  if(follow&&!edit){const newTarget=flyRoot.position.clone().add(new T.Vector3(0,.35,0)),offset=camera.position.clone().sub(controls.target),headingDelta=Math.atan2(Math.sin(latest.fly.heading-cameraHeading),Math.cos(latest.fly.heading-cameraHeading));
   offset.applyAxisAngle(new T.Vector3(0,1,0),-headingDelta);camera.position.copy(newTarget).add(offset);controls.target.copy(newTarget);cameraHeading=latest.fly.heading;}
  const t=latest.time;
  for(const a of animated){let phase=/right/.test(a.name)?Math.PI:0;if(/T2/.test(a.name))phase+=Math.PI;let angle=0;
- if(/wing/.test(a.name))angle=Math.sin(t*25)*.025;
+ if(/wing/.test(a.name)){const airborne=latest.fly.flight_mode!=='ground';angle=Math.sin(t*(airborne?155:25))*(airborne?.34:.025);}
  else if(/head/.test(a.name))angle=latest.fly.state==='feeding'?Math.sin(t*8)*.07:0;
- else angle=Math.sin(t*15+phase)*(/coxa/.test(a.name)?.1:.15)*Math.min(latest.fly.speed,1);
+ else {const airborne=latest.fly.flight_mode!=='ground';angle=airborne?(/coxa/.test(a.name)?.28:.42):Math.sin(t*15+phase)*(/coxa/.test(a.name)?.1:.15)*Math.min(latest.fly.speed,1);}
  a.node.quaternion.copy(a.base).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,0,1),angle));}
  sun.target.position.copy(flyRoot.position);sun.position.copy(flyRoot.position).add(new T.Vector3(-7,16,5));}
  controls.update();renderer.render(scene,camera);frameCount++;if(now-lastFps>1000){$('fps').textContent=Math.round(frameCount*1000/(now-lastFps))+' FPS';frameCount=0;lastFps=now;}

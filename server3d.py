@@ -84,6 +84,10 @@ class Simulation:
         with self.lock:
             action = d.get('action')
             if action == 'pause': self.paused = bool(d.get('value', True))
+            elif action == 'flight':
+                self.world.fly.flight_enabled = bool(d.get('value', True))
+                if not self.world.fly.flight_enabled and self.world.fly.flight_mode != 'ground':
+                    self.world.fly.flight_mode = 'landing'
             elif action == 'paint':
                 if d.get('tool') not in ['wall','floor','rock','plant','stump','puddle','food','spawn']: raise ValueError('unknown tool')
                 if not self.paused: raise ValueError('Pause to edit')
