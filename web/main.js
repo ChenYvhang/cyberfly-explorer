@@ -69,7 +69,7 @@ function buildWorld(data){mapData=data;lastRevision=data.revision;clearGroup(hab
 }
 let flyModel,animated=[],flySize=1,latest,frameCount=0,lastFps=performance.now(),edit=false,selectedTool='food',follow=true,cameraMode='follow',cameraHeading=0;
 const loader=new GLTFLoader();
-loader.load('./assets/flybody.glb',gltf=>{
+loader.load('./assets/flybody.glb?v=20260915-3p',gltf=>{
  flyModel=gltf.scene;flyRoot.add(flyModel);
  const palette={body:'#855329',lower:'#b78348',red:'#a92b13',brown:'#533018',black:'#1a130f','bristle-brown':'#29180d',ocelli:'#32160d',membrane:'#c8d7d2'};
  flyModel.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;

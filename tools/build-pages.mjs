@@ -6,7 +6,7 @@ await mkdir(new URL('assets/',out),{recursive:true});await cp(new URL('../assets
 for(const dir of ['vendor/three/build/','vendor/three/examples/jsm/controls/','vendor/three/examples/jsm/environments/','vendor/three/examples/jsm/loaders/','vendor/three/examples/jsm/utils/'])await mkdir(new URL(dir,out),{recursive:true});
 for(const name of ['three.module.min.js','three.core.min.js'])await cp(new URL('build/'+name,three),new URL('vendor/three/build/'+name,out));
 for(const name of ['controls/OrbitControls.js','environments/RoomEnvironment.js','loaders/GLTFLoader.js','utils/BufferGeometryUtils.js'])await cp(new URL('examples/jsm/'+name,three),new URL('vendor/three/examples/jsm/'+name,out));
-let html=await readFile(new URL('index.html',web),'utf8');html=html.replace('href="/web/style.css"','href="./style.css"')
+let html=await readFile(new URL('index.html',web),'utf8');html=html.replace('href="/web/style.css"','href="./style.css?v=20260915-3p"')
  .replace('"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"','"three":"./vendor/three/build/three.module.min.js","three/addons/":"./vendor/three/examples/jsm/"')
- .replace('<script type="module" src="/web/main.js"></script>','<script src="./demo-api.js"></script><script type="module" src="./main.js"></script>');
+ .replace('<script type="module" src="/web/main.js"></script>','<script src="./demo-api.js?v=20260915-3p"></script><script type="module" src="./main.js?v=20260915-3p"></script>');
 await writeFile(new URL('index.html',out),html.replace('/assets/flybody.glb','./assets/flybody.glb'));await writeFile(new URL('.nojekyll',out),'');console.log('Built Cyberfly browser demo in dist/');
