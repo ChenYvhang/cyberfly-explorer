@@ -1,14 +1,15 @@
 import {chromium} from 'playwright';
+const baseURL=process.argv[2]||'http://127.0.0.1:8765';
 const browser=await chromium.launch({channel:'msedge',headless:true,args:['--enable-webgl','--ignore-gpu-blocklist']});
 const page=await browser.newPage({viewport:{width:1440,height:960}});
 const errors=[];page.on('pageerror',e=>errors.push(e.message));
-await page.goto('http://127.0.0.1:8765');
+await page.goto(baseURL);
 await page.waitForFunction(()=>window.cyberflyReady,null,{timeout:60000});
-await page.waitForFunction(()=>document.getElementById('status').textContent==='模拟已暂停',null,{timeout:60000});
+await page.waitForFunction(()=>/暂停/.test(document.getElementById('status').textContent),null,{timeout:60000});
 await page.locator('#play').click();
 await page.waitForFunction(()=>parseFloat(document.getElementById('simtime').textContent)>.3,null,{timeout:60000});
 await page.locator('#play').click();
-await page.waitForFunction(()=>document.getElementById('status').textContent==='模拟已暂停');
+await page.waitForFunction(()=>/暂停/.test(document.getElementById('status').textContent));
 await page.waitForTimeout(2500);
 await page.screenshot({path:'preview-3d.png'});
 await page.locator('#macro').click();await page.waitForTimeout(600);

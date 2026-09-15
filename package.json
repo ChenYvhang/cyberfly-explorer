@@ -1,1 +1,1 @@
-{"name":"cyberfly-3d","private":true,"type":"module","dependencies":{"three":"0.180.0"},"devDependencies":{"playwright":"1.55.1"}}
+{"name":"cyberfly-3d","private":true,"type":"module","scripts":{"build:pages":"node tools/build-pages.mjs"},"dependencies":{"three":"0.180.0"},"devDependencies":{"playwright":"1.55.1"}}

@@ -2,6 +2,8 @@
 
 一只由 MaleCNS 神经模型驱动的果蝇，在 Three.js / WebGL 三维栖境中探索。浏览器在本机运行画面，Python 在本机 CPU 上计算神经活动。
 
+**[直接体验网页版](https://chenyvhang.github.io/cyberfly-explorer/)** — 无需安装。在线版使用浏览器内轻量控制器；本地版保留完整 166,700 神经元 MaleCNS 模型。
+
 ![Cyberfly Explorer 微距视图](preview-3d-macro.png)
 
 ![Cyberfly Explorer 三维地图编辑器](preview-3d-editor.png)

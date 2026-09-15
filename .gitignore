@@ -23,4 +23,4 @@ preview-3d.png
 .idea/
 .DS_Store
 Thumbs.db
-
+dist/

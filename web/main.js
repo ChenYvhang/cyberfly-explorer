@@ -85,7 +85,7 @@ const pathMat=new T.LineBasicMaterial({color:'#719a72',transparent:true,opacity:
 function toast(t){$('toast').textContent=t;$('toast').style.opacity=1;clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('toast').style.opacity=0,3500);}
 async function command(d){const r=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});const j=await r.json();if(!r.ok)throw Error(j.error);return j;}
 async function poll(){try{latest=await (await fetch('/api/state')).json();if(lastRevision!==latest.revision)buildWorld(await(await fetch('/api/world')).json());rebuildFoods(latest.foods);
- $('status').textContent=latest.error?latest.error:latest.status==='warming'?'神经模型预热中':latest.status==='preview'?'画面预览 · 无神经模拟':latest.paused?'模拟已暂停':'全脑闭环运行中';
+ $('status').textContent=latest.error?latest.error:latest.status==='warming'?'神经模型预热中':latest.status==='preview'?'画面预览 · 无神经模拟':latest.status==='demo'?(latest.paused?'在线演示已暂停':'在线轻量闭环运行中'):latest.paused?'模拟已暂停':'全脑闭环运行中';
  const states={'exploring':'探索','feeding':'接触食物','escaping':'逃逸','avoiding':'接近障碍','tracking food':'接近食物'};
  $('behavior').textContent=states[latest.fly.state]||latest.fly.state;$('simtime').textContent=latest.time.toFixed(2)+' s';$('ms').textContent=latest.stats.step_ms?latest.stats.step_ms.toFixed(1)+' ms':'—';$('active').textContent=latest.status==='preview'?'—':(latest.stats.active||0).toLocaleString();$('food').textContent=latest.fly.foods_found+' / '+(latest.foods.length+latest.fly.foods_found);
  $('play').textContent=latest.paused?'开始探索':'暂停探索';
